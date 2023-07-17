@@ -1,0 +1,10 @@
+{
+  "name": "wmata",
+  "scripts": {
+    "start": "tailwindcss -i ./style.css -o ./tailwind.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.4",
+    "tailwindcss": "^3.3.3"
+  }
+}

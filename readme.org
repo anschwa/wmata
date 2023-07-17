@@ -1,0 +1,8 @@
+#+TITLE: wmata
+#+AUTHOR: Adam Schwartz
+#+DATE: July 16, 2023
+#+OPTIONS: ':true *:true toc:nil num:nil ^:nil
+
+* Washington Metropolitan Area Transit Authority
+
+- Sign up for a developer account at: https://developer.wmata.com/
