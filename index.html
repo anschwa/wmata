@@ -4,165 +4,67 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="tailwind.css" />
-    <script src="app.js" async defer></script>
+    <script src="app.js"></script>
     <title>DC Bus Life</title>
   </head>
-  <body class="p-2">
-    <div class="mx-2 flex justify-end gap-2">
-      <div class="w-6 h-6">
-        <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path>
-        </svg>
+  <body>
+    <header>
+      <nav class="mx-2 flex justify-end gap-2 hidden">
+        <div id="user" class="w-6 h-6">
+          <svg aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </div>
+        <button
+          onclick="handleLogout()"
+          name="logout"
+          class="underline"
+        >Logout</button>
+      </nav>
+
+      <div class="p-2 w-full flex gap-2">
+        <div class="flex-none py-1 px-2 bg-black rounded-md font-sans font-bold text-white text-center">
+          <div class="text-5xl">M</div>
+          <div class="text-md -mt-2">metro</div>
+        </div>
+
+        <div id="logo" class="flex-1 flex items-center justify-center bg-black rounded-md">
+          <div
+            class="text-4xl text-amber-500 font-mono font-bold"
+          >DC BUS LIFE</div>
+        </div>
       </div>
-      <button class="underline">Login</button>
-      <button class="underline">Logout</button>
-    </div>
+    </header>
 
-    <form id="login" class="flex flex-col gap-4">
-      <label class="flex flex-col">
-        <div class="mb-1">API Key</div>
-        <input name="apiKey" type="text" placeholder="abcdef0123456789fedcba9876543210"/>
-      </label>
+    <main role="main" class="p-2">
+    </main>
 
-      <button
-        type="submit"
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-      >Login</button>
-    </form>
+    <template id="loginTmpl">
+      <form class="flex flex-col gap-4">
+        <label class="flex flex-col">
+          <div class="mb-1">API Key</div>
+          <input
+            class="rounded"
+            name="apiKey"
+            type="text"
+            placeholder="abcdef0123456789fedcba9876543210"
+          />
+        </label>
 
-    <form id="busStops" class="flex flex-col gap-4">
-      <label class="flex flex-col">
-        <div>Search Bus Stops</div>
-        <input name="busStop" type="text" placeholder="Greenbelt" />
-      </label>
-    </form>
+        <button
+          type="submit"
+          disabled
+          class="bg-blue-500 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded"
+        >Login</button>
+      </form>
+    </template>
 
-    <details class="my-3">
-      <summary>Bus Stop Schedule</summary>
-
-      <div class="my-2 text-lg font-bold">
-        GREENBELT METRO DR + CHERRYWOOD LA
-      </div>
-
-      <div class="font-bold">Routes</div>
-      <p class="mb-2 font-mono text-justify">
-        81, 87, 87c, 87cv1, 89, 89M, 89v1, B30, C2, G12, G13, G14, G16, G16v1, R11, R12, R3.
-      </p>
-
-      <div class="font-bold">Schedule</div>
-
-      <table class="w-full">
-        <thead>
-          <tr>
-            <th>Route</th>
-            <th>Direction</th>
-            <th>Headsign</th>
-            <th>Scheduled Arrival Time</th>
-          </tr>
-        </thead>
-
-        <tr>
-          <td>87c</td>
-          <td>SOUTH</td>
-          <td>GREENBELT STATION</td>
-          <td>2014-10-27T05:35:12</td>
-        </tr>
-        <tr>
-          <td>R11</td>
-          <td>NORTH</td>
-          <td>GREENBELT STATION</td>
-          <td>2014-10-27T05:41:43</td>
-        </tr>
-        <tr>
-          <td>G13</td>
-          <td>WEST</td>
-          <td>GREENBELT STATION</td>
-          <td>2014-10-27T05:48:02</td>
-        </tr>
-        <tr>
-          <td>G12</td>
-          <td>WEST</td>
-          <td>GREENBELT STATION</td>
-          <td>2014-10-27T05:51:17</td>
-        </tr>
-        <tr>
-          <td>C2</td>
-          <td>EAST</td>
-          <td>GREENBELT STATION</td>
-          <td>2014-10-27T05:57:35</td>
-        </tr>
-        <tr>
-          <td>87c</td>
-          <td>SOUTH</td>
-          <td>GREENBELT STATION</td>
-          <td>2014-10-27T06:07:12</td>
-        </tr>
-        <tr>
-          <td>R11</td>
-          <td>NORTH</td>
-          <td>GREENBELT STATION</td>
-          <td>2014-10-27T06:11:43</td>
-        </tr>
-        <tr>
-          <td>R3</td>
-          <td>NORTH</td>
-          <td>GREENBELT STATION</td>
-          <td>2014-10-27T06:12:08</td>
-        </tr>
-        <tr>
-          <td>G13</td>
-          <td>WEST</td>
-          <td>GREENBELT STATION</td>
-          <td>2014-10-27T06:18:02</td>
-        </tr>
-        <tr>
-          <td>87</td>
-          <td>SOUTH</td>
-          <td>NEW CARROLLTON STATION VIA GREENBELT STATION</td>
-          <td>2014-10-27T06:37:12</td>
-        </tr>
-      </table>
-    </details>
-
-    <div class="text-lg">
-      Next buses for: <span class="font-bold">Bwi Airport + Stop 2</span>
-    </div>
-
-    <table class="w-full">
-      <thead>
-        <tr>
-          <th>Route</th>
-          <th>Details</th>
-          <th>Minutes Away</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr>
-          <td>B30</td>
-          <td>North to Bwi - Thurgood Marshall Airport</td>
-          <td class="text-center">8</td>
-        </tr>
-        <tr>
-          <td>B30</td>
-          <td>South to Greenbelt Station</td>
-          <td class="text-center">37</td>
-        </tr>
-        <tr>
-          <td>B30</td>
-          <td>North to Bwi - Thurgood Marshall Airport</td>
-          <td class="text-center">48</td>
-        </tr>
-        <tr>
-          <td>B30</td>
-          <td>South to Greenbelt Station</td>
-          <td class="text-center">77</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <button
-      class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
-    >Refresh</button>
+    <template id="stopSearchTmpl">
+      <form>
+        <label>
+          <input name="busStop" type="text" placeholder="ABC ST + 123 AVE" />
+        </label>
+      </form>
+    </template>
   </body>
 </html>
