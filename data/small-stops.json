@@ -1,0 +1,98 @@
+{
+  "Stops": [
+    {
+      "StopID": "6000234",
+      "Name": "COLUMBIA PIKE + S GLEBE RD",
+      "Lon": -77.091134,
+      "Lat": 38.861601,
+      "Routes": [
+        "16A",
+        "16C",
+        "16E",
+        "16M",
+        "16Y"
+      ]
+    },
+    {
+      "StopID": "6000235",
+      "Name": "JOYCE ST EW + JOYCE ST NS",
+      "Lon": -77.063316,
+      "Lat": 38.861499,
+      "Routes": [
+        "10A"
+      ]
+    },
+    {
+      "StopID": "3000820",
+      "Name": "ATWOOD ST + ALPINE ST",
+      "Lon": -76.891448,
+      "Lat": 38.861629,
+      "Routes": [
+        "V14",
+        "V14/"
+      ]
+    },
+    {
+      "StopID": "3000821",
+      "Name": "ATWOOD ST + ALPINE ST",
+      "Lon": -76.888942,
+      "Lat": 38.861685,
+      "Routes": [
+        "V14",
+        "V14/"
+      ]
+    },
+    {
+      "StopID": "3000822",
+      "Name": "ATWOOD ST + ADDISON RD S",
+      "Lon": -76.888718,
+      "Lat": 38.861635,
+      "Routes": [
+        "V14"
+      ]
+    },
+    {
+      "StopID": "5001104",
+      "Name": "JERMANTOWN RD + GAINSBOROUGH CT",
+      "Lon": -77.327004,
+      "Lat": 38.861747,
+      "Routes": [
+        "2B",
+        "2B*1",
+        "2B/"
+      ]
+    },
+    {
+      "StopID": "5001105",
+      "Name": "JERMANTOWN RD + GAINSBOROUGH CT",
+      "Lon": -77.32688,
+      "Lat": 38.861682,
+      "Routes": [
+        "2B",
+        "2B*1",
+        "2B*2"
+      ]
+    },
+    {
+      "StopID": "1000346",
+      "Name": "BRANCH AVE SE + ALABAMA AVE SE",
+      "Lon": -76.958903,
+      "Lat": 38.861809,
+      "Routes": [
+        "36"
+      ]
+    },
+    {
+      "StopID": "1000347",
+      "Name": "ALABAMA AVE SE + 32ND ST SE",
+      "Lon": -76.96162,
+      "Lat": 38.861663,
+      "Routes": [
+        "D51",
+        "V7",
+        "W4",
+        "W4*1"
+      ]
+    }
+  ]
+}

@@ -3,8 +3,8 @@ import Login from "./Login";
 
 const getApiKey = () => localStorage.getItem("apiKey");
 // const setApiKey = (apiKey: string) => localStorage.setItem("apiKey", apiKey);
-// const deleteApiKey = () => localStorage.removeItem("apiKey");
 
+// const deleteApiKey = () => localStorage.removeItem("apiKey");
 function App() {
   const apiKey = getApiKey();
 
