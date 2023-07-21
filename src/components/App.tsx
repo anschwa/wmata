@@ -1,25 +1,42 @@
+import { useState } from "react";
+
 import Nav from "./Nav";
 import Login from "./Login";
+import BusPredictions from "./BusPredictions";
 
-const getApiKey = () => localStorage.getItem("apiKey");
-// const setApiKey = (apiKey: string) => localStorage.setItem("apiKey", apiKey);
+const DB = {
+  getApiKey() {
+    return localStorage.getItem("apiKey");
+  },
+  setApiKey(apiKey: string) {
+    localStorage.setItem("apiKey", apiKey);
+  },
+  deleteApiKey() {
+    localStorage.removeItem("apiKey");
+  },
+};
 
-// const deleteApiKey = () => localStorage.removeItem("apiKey");
 function App() {
-  const apiKey = getApiKey();
+  const [hasApiKey, setHasApiKey] = useState(!!DB.getApiKey());
+  const handleLogin = (apiKey: string) => {
+    DB.setApiKey(apiKey);
 
-  const logout = () => {
+    setHasApiKey(true);
+  };
+
+  const handleLogout = () => {
     if (!window.confirm("Delete API Key and logout?")) {
       return;
     }
 
+    DB.deleteApiKey();
     window.location.reload();
   };
 
   return (
     <>
       <header>
-        {apiKey ? <Nav logoutFn={logout} /> : null}
+        {hasApiKey ? <Nav onLogout={handleLogout} /> : null}
 
         <div className="p-2 w-full flex gap-2">
           <div className="flex-none py-1 px-2 bg-black rounded-md font-sans font-bold text-white text-center">
@@ -37,7 +54,9 @@ function App() {
         </div>
       </header>
 
-      {!apiKey ? <Login /> : null}
+      <main role="main" className="min-w-min">
+        {!hasApiKey ? <Login onLogin={handleLogin} /> : <BusPredictions />}
+      </main>
     </>
   );
 }

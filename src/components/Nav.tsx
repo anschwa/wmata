@@ -1,4 +1,8 @@
-function Nav(props: { logoutFn: () => void }) {
+type NavProps = {
+  onLogout: () => void;
+};
+
+function Nav(props: NavProps) {
   return (
     <nav className="mx-2 flex justify-end gap-2">
       <div id="user" className="w-6 h-6">
@@ -18,7 +22,7 @@ function Nav(props: { logoutFn: () => void }) {
         </svg>
       </div>
 
-      <button onClick={props.logoutFn} className="underline">
+      <button onClick={props.onLogout} className="underline">
         Logout
       </button>
     </nav>
