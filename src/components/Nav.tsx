@@ -4,7 +4,7 @@ type NavProps = {
 
 function Nav(props: NavProps) {
   return (
-    <nav className="mx-2 flex justify-end gap-2">
+    <nav className="py-2 px-4 flex justify-end gap-2">
       <div id="user" className="w-6 h-6">
         <svg
           aria-hidden="true"
