@@ -11,7 +11,7 @@
 #+begin_src sh
 $ jq -c '[.Stops[] select(.Routes[] | contains ("2B"))]' all-stops.json > 2B-stops.json
 #+end_src
-3
+
 #+begin_src sh
 $ jq -c '(unique_by(.StopID) | sort_by(.StopID))' 2B-stops.json > 2B-stops-uniq.json
 #+end_src

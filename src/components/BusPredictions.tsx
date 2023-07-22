@@ -1,8 +1,89 @@
 import { useState } from "react";
 
-type BusPredictionsProps = {};
+interface GeoLocation {
+  readonly lat: string;
+  readonly lon: string;
+}
+
+async function getGeoLocationApi(
+  streetAddress: string,
+): Promise<GeoLocation | null> {
+  const url = new URL("https://nominatim.openstreetmap.org/search.php");
+  url.searchParams.append("street", streetAddress);
+  url.searchParams.append("street", streetAddress);
+  url.searchParams.append("city", "washington");
+  url.searchParams.append("country", "usa");
+  url.searchParams.append("format", "jsonv2");
+
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    console.error(resp);
+    return null;
+  }
+
+  const results = (await resp.json()) as GeoLocation[];
+  if (results.length === 0) {
+    return null;
+  }
+
+  const firstResult = results[0];
+  const geo = { lat: firstResult.lat, lon: firstResult.lon };
+
+  return geo;
+}
+
+interface BusStop {
+  readonly StopID: string;
+  readonly Name: string;
+}
+async function getBusStopsApi(
+  apiKey: string,
+  geo: GeoLocation,
+): Promise<BusStop[] | null> {
+  const url = new URL("https://api.wmata.com/Bus.svc/json/jStops");
+  url.searchParams.append("Lat", geo.lat);
+  url.searchParams.append("Lon", geo.lon);
+  url.searchParams.append("Radius", "200");
+
+  const resp = await fetch(url, { headers: { api_key: apiKey } });
+
+  if (!resp.ok) {
+    console.error(resp);
+    return null;
+  }
+
+  const results = (await resp.json()) as BusStop[];
+
+  console.log(results);
+  return results;
+}
+
+async function okayThen(apiKey: string, address: string) {
+  const geo = await getGeoLocationApi(address);
+  if (!geo) {
+    return;
+  }
+
+  const stops = await getBusStopsApi(apiKey, geo);
+
+  debugger;
+}
+
+type BusPredictionsProps = {
+  apiKey: string;
+};
 
 function BusPredictions(props: BusPredictionsProps) {
+  const [disableSearch, setDisableSearch] = useState(false);
+  const [busStopAddress, setBusStopAddress] = useState("");
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setDisableSearch(true);
+
+    okayThen(props.apiKey, busStopAddress);
+  }
+
   return (
     <>
       <div className="mx-4">
@@ -19,12 +100,16 @@ function BusPredictions(props: BusPredictionsProps) {
               </svg>
             </div>
 
-            <input
-              className="flex-1 rounded"
-              name="stopId"
-              type="text"
-              placeholder="Bus Stop ID"
-            />
+            <form onSubmit={handleSubmit}>
+              <input
+                onChange={(e) => setBusStopAddress(e.target.value)}
+                disabled={disableSearch}
+                className="flex-1 rounded"
+                name="stopId"
+                type="text"
+                placeholder="Bus Stop or Street Address"
+              />
+            </form>
           </div>
         </div>
 
@@ -38,63 +123,70 @@ function BusPredictions(props: BusPredictionsProps) {
           <button className="px-3 py-1 text-sm text-semibold border border-slate-500 rounded-full">
             #3000820
           </button>
-          {/* <button className="px-3 py-1 text-sm text-semibold border border-slate-500 rounded-full"> */}
-          {/*   #3000821 */}
-          {/* </button> */}
-          {/* <button className="px-3 py-1 text-sm text-semibold border border-slate-500 rounded-full"> */}
-          {/*   #3000822 */}
-          {/* </button> */}
-          {/* <button className="px-3 py-1 text-sm text-semibold border border-slate-500 rounded-full"> */}
-          {/*   #5001104 */}
-          {/* </button> */}
-          {/* <button className="px-3 py-1 text-sm text-semibold border border-slate-500 rounded-full"> */}
-          {/*   #5001105 */}
-          {/* </button> */}
         </div>
       </div>
 
-      <div className="m-4 rounded shadow-md">
-        <div className="px-6 py-4">
-          <div className="font-bold text-xl mb-2">8 min</div>
+      <div className="m-2 rounded-lg shadow-md divide-y">
+        <div className="m-2">
+          <div className="py-4 px-2">
+            <div className="font-bold text-xl mb-1">8 min</div>
 
-          <div className="text-lg">
-            [B30] North to Bwi - Thurgood Marshall Airport
-          </div>
-        </div>
-      </div>
+            <div className="flex gap-4 items-center">
+              <div className="text-2xl">B30</div>
+              <div className="flex-1 text-base text-center">
+                North to Bwi - Thurgood Marshall Airport
+              </div>
+            </div>
 
-      <div className="m-4 rounded shadow-md">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="font-bold text-xl mb-2">37 min</div>
-            <div className="w-8 h-8">
-              <svg
-                className="text-amber-500"
-                aria-hidden="true"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+            <div className="mt-4 flex gap-2">
+              <div className="w-6 h-6">
+                <svg
+                  className="text-yellow-500"
+                  aria-hidden="true"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    clipRule="evenodd"
+                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
+                    fillRule="evenodd"
+                  />
+                </svg>
+              </div>
+
+              <div className="flex-1 text-sm">
+                Some trips may be delayed due to operator availability.
+              </div>
             </div>
           </div>
-          <div className="text-lg">[B30] South to Greenbelt Station</div>
         </div>
-      </div>
 
-      <div className="m-4 rounded shadow-md">
-        <div className="px-6 py-4">
-          <div className="font-bold text-xl mb-2">77 min</div>
+        <div className="m-2 divide-y">
+          <div className="py-4 px-2">
+            <div className="flex gap-2 items-center">
+              <div className="font-bold text-xl mb-1">37 min</div>
+            </div>
 
-          <div className="text-lg">
-            [B30] North to Bwi - Thurgood Marshall Airport
+            <div className="flex gap-4 items-center">
+              <div className="text-2xl">B30</div>
+              <div className="flex-1 text-base text-center">
+                South to Greenbelt Station
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="m-2 divide-y">
+          <div className="py-4 px-2">
+            <div className="font-bold text-xl mb-1">77 min</div>
+
+            <div className="flex gap-4 items-center">
+              <div className="text-2xl">B30</div>
+              <div className="flex-1 text-base text-center">
+                North to Bwi - Thurgood Marshall Airport
+              </div>
+            </div>
           </div>
         </div>
       </div>

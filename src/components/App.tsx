@@ -55,7 +55,11 @@ function App() {
       </header>
 
       <main role="main" className="min-w-min">
-        {!hasApiKey ? <Login onLogin={handleLogin} /> : <BusPredictions />}
+        {!hasApiKey ? (
+          <Login onLogin={handleLogin} />
+        ) : (
+          <BusPredictions apiKey={DB.getApiKey() || ""} />
+        )}
       </main>
     </>
   );
