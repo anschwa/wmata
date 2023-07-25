@@ -5,7 +5,9 @@ import ApiService, { BusStop, BusIncidents } from "../services/ApiService";
 
 import { BusIcon, SearchIcon, WarningIcon } from "./Icons";
 
-const API = new ApiService(DbService.getApiKey());
+const DB = new DbService();
+const API_KEY = DB.getApiKey();
+const API = API_KEY ? new ApiService(API_KEY) : null;
 
 type BusSearchProps = {
   incidents: BusIncidents;
@@ -33,7 +35,8 @@ export default function BusSearch(props: BusSearchProps) {
     setLoading(true);
     setSearchDisabled(true);
 
-    API.findStops(address)
+    API!
+      .findStops(address)
       .then((results) => {
         setResults(results);
         setNoResults(results.length === 0);

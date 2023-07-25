@@ -1,42 +1,34 @@
 import { useState, useEffect } from "react";
 
-import DB from "../services/DbService";
+import DbService from "../services/DbService";
 import ApiService, { BusIncidents } from "../services/ApiService";
 
 import Nav from "./Nav";
 import Login from "./Login";
 import BusPredictions from "./BusPredictions";
 
-const apiKey = DB.getApiKey();
-const API = apiKey ? new ApiService(apiKey) : null;
+const DB = new DbService();
+const API_KEY = DB.getApiKey();
+const API = API_KEY ? new ApiService(API_KEY) : null;
 
 export default function App() {
-  const [hasApiKey, setHasApiKey] = useState(!!apiKey);
+  const hasApiKey = !!API_KEY;
   const [incidents, setIncidents] = useState<BusIncidents>(null);
 
-  // Prevent double-fetch during development
-  // https://react.dev/learn/synchronizing-with-effects#how-to-handle-the-effect-firing-twice-in-development
   useEffect(() => {
-    let ignoreRequest = false;
+    if (!hasApiKey) {
+      return;
+    }
 
-    window.setTimeout(() => {
-      if (ignoreRequest || API === null) {
-        return;
-      }
-
-      API.getIncidents()
-        .then((results) => setIncidents(results))
-        .catch((e) => console.error(e));
-    }, 1000);
-
-    return () => {
-      ignoreRequest = true;
-    };
-  }, []);
+    API!
+      .getIncidents()
+      .then((results) => setIncidents(results))
+      .catch((e) => console.error(e));
+  }, [hasApiKey]);
 
   const handleLogin = (apiKey: string) => {
     DB.setApiKey(apiKey);
-    setHasApiKey(true);
+    window.location.reload();
   };
 
   const handleLogout = () => {

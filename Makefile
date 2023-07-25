@@ -39,4 +39,4 @@ build: ## Build app for production
 
 .PHONY: preview
 preview: ## Preview production app locally
-	$(DOCKER) run --rm -it -v $(MOUNT) -w $(DIR) $(IMAGE) npm run preview
+	$(DOCKER) run --rm -it -v $(MOUNT) -w $(DIR) -p $(PORT) $(IMAGE) npm run preview

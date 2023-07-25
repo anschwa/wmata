@@ -4,16 +4,16 @@ export interface DB {
   deleteApiKey: () => void;
 }
 
-const localDb: DB = {
+export default class LocalDb implements DB {
   getApiKey() {
     return localStorage.getItem("apiKey") || "";
-  },
+  }
+
   setApiKey(apiKey: string) {
     localStorage.setItem("apiKey", apiKey);
-  },
+  }
+
   deleteApiKey() {
     localStorage.removeItem("apiKey");
-  },
-};
-
-export default localDb;
+  }
+}

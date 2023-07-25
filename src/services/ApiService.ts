@@ -169,13 +169,21 @@ async function getBusIncidents(apiKey: string): Promise<BusIncidents> {
   return incidents;
 }
 
+export async function validateApiKey(apiKey: string): Promise<boolean> {
+  const resp = await fetch("https://api.wmata.com/Misc/Validate", {
+    headers: { api_key: apiKey },
+  });
+
+  return resp.ok;
+}
+
 interface BusApi {
   findStops: (address: string) => Promise<BusStop[]>;
   getPredictions: (stopId: string) => Promise<BusPrediction[]>;
   getIncidents: () => Promise<BusIncidents>;
 }
 
-export default class busApi implements BusApi {
+export default class Api implements BusApi {
   readonly apiKey: string;
 
   constructor(apiKey: string) {

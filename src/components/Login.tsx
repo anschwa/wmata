@@ -1,25 +1,51 @@
 import { useState } from "react";
 
+import { validateApiKey } from "../services/ApiService";
+
 type LoginProps = {
   onLogin: (apiKey: string) => void;
 };
 
 function Login(props: LoginProps) {
   const [apiKey, setApiKey] = useState("");
+  const [errorMsg, setErrorMsg] = useState<string>("");
   const [loginDisabled, setLoginDisabled] = useState(true);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    props.onLogin(apiKey);
+    setLoginDisabled(true); // Soft-throttle requests
+
+    validateApiKey(apiKey)
+      .then((valid) => {
+        if (!valid) {
+          setErrorMsg("Invalid API Key for WMATA");
+          return;
+        }
+
+        props.onLogin(apiKey);
+      })
+      .catch((e) => console.error(e));
+  };
+
+  const handleInput = (apiKey: string) => {
+    setApiKey(apiKey);
+    setLoginDisabled(apiKey.length === 0);
+    setErrorMsg("");
   };
 
   return (
     <form onSubmit={handleSubmit} className="p-4 flex flex-col gap-4">
+      {errorMsg && (
+        <div className="p-2 bg-red-50 text-center rounded">
+          <div className="font-bold text-red-800">{errorMsg}</div>
+        </div>
+      )}
+
       <label className="flex flex-col">
         <div className="mb-1">API Key</div>
         <input
-          onChange={(e) => setApiKey(e.target.value)}
+          onChange={(e) => handleInput(e.target.value)}
           onBlur={() => setLoginDisabled(apiKey.length === 0)}
           className="rounded"
           name="apiKey"
