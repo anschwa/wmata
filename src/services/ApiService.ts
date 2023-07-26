@@ -19,8 +19,7 @@ async function getGeoLocation(
 
   const resp = await fetch(url);
   if (!resp.ok) {
-    console.error(resp);
-    return null;
+    return Promise.reject(resp);
   }
 
   const results = (await resp.json()) as GeoLocation[];
@@ -32,12 +31,11 @@ async function getGeoLocation(
   return { lat: firstResult.lat, lon: firstResult.lon };
 }
 
-type StopId = string;
 type RouteId = string;
 
 export interface BusStop {
-  name: string;
-  stopId: StopId;
+  stopId: string;
+  stopName: string;
   routes: RouteId[];
 }
 
@@ -61,8 +59,7 @@ async function getBusStops(
   const resp = await fetch(url, { headers: { api_key: apiKey } });
 
   if (!resp.ok) {
-    console.error(resp);
-    return [];
+    return Promise.reject(resp);
   }
 
   interface apiResults {
@@ -76,24 +73,29 @@ async function getBusStops(
   const results = (await resp.json()) as apiResults;
 
   return results.Stops.map((s) => ({
-    name: s.Name,
     stopId: s.StopID,
+    stopName: s.Name,
     routes: s.Routes.filter((route) => !/[^A-Z1-9]/.test(route)),
   }));
 }
 
+export type BusPredictions = {
+  stopName: string;
+  predictions: BusPrediction[];
+};
+
 export interface BusPrediction {
-  name: string;
-  routeId: RouteId;
+  routeId: string;
+  headsign: string;
   minutes: number;
 }
 
 async function getBusPredictions(
   apiKey: string,
   stopId: string,
-): Promise<BusPrediction[]> {
+): Promise<BusPredictions> {
   if (!stopId) {
-    return [];
+    return { stopName: "", predictions: [] };
   }
 
   const url = new URL(
@@ -103,11 +105,11 @@ async function getBusPredictions(
 
   const resp = await fetch(url, { headers: { api_key: apiKey } });
   if (!resp.ok) {
-    console.error(resp);
-    return [];
+    return Promise.reject(resp);
   }
 
   interface apiResults {
+    StopName: string;
     Predictions: {
       DirectionText: string;
       Minutes: number;
@@ -116,14 +118,17 @@ async function getBusPredictions(
   }
 
   const results = (await resp.json()) as apiResults;
-  return results.Predictions.map((p) => ({
-    name: p.DirectionText,
-    routeId: p.RouteID,
-    minutes: p.Minutes,
-  }));
+  return {
+    stopName: results.StopName,
+    predictions: results.Predictions.map((p) => ({
+      routeId: p.RouteID,
+      headsign: p.DirectionText,
+      minutes: p.Minutes,
+    })),
+  };
 }
 
-type BusIncident = {
+export type BusIncident = {
   description: string;
   incidentType: string;
   updatedAt: Date;
@@ -170,7 +175,8 @@ async function getBusIncidents(apiKey: string): Promise<BusIncidents> {
 }
 
 export async function validateApiKey(apiKey: string): Promise<boolean> {
-  const resp = await fetch("https://api.wmata.com/Misc/Validate", {
+  const url = new URL("https://api.wmata.com/Misc/Validate");
+  const resp = await fetch(url, {
     headers: { api_key: apiKey },
   });
 
@@ -179,7 +185,7 @@ export async function validateApiKey(apiKey: string): Promise<boolean> {
 
 interface BusApi {
   findStops: (address: string) => Promise<BusStop[]>;
-  getPredictions: (stopId: string) => Promise<BusPrediction[]>;
+  getPredictions: (stopId: string) => Promise<BusPredictions>;
   getIncidents: () => Promise<BusIncidents>;
 }
 
@@ -203,7 +209,7 @@ export default class Api implements BusApi {
     return getBusStops(this.apiKey, geo);
   }
 
-  async getPredictions(stopId: string): Promise<BusPrediction[]> {
+  async getPredictions(stopId: string): Promise<BusPredictions> {
     return getBusPredictions(this.apiKey, stopId);
   }
 

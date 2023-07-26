@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 
 import DbService from "../services/DbService";
-import ApiService, { BusIncidents } from "../services/ApiService";
+import ApiService, { BusStop, BusIncidents } from "../services/ApiService";
 
 import Nav from "./Nav";
 import Login from "./Login";
+import BusSearch from "./BusSearch";
 import BusPredictions from "./BusPredictions";
+import { BackIcon } from "./Icons";
 
 const DB = new DbService();
 const API_KEY = DB.getApiKey();
@@ -14,6 +16,7 @@ const API = API_KEY ? new ApiService(API_KEY) : null;
 export default function App() {
   const hasApiKey = !!API_KEY;
   const [incidents, setIncidents] = useState<BusIncidents>(null);
+  const [busStop, setBusStop] = useState<BusStop | null>(null);
 
   useEffect(() => {
     if (!hasApiKey) {
@@ -40,6 +43,10 @@ export default function App() {
     window.location.reload();
   };
 
+  const handleBusStop = (bs: BusStop) => {
+    setBusStop(bs);
+  };
+
   return (
     <>
       {hasApiKey && <Nav onLogout={handleLogout} />}
@@ -62,7 +69,29 @@ export default function App() {
 
         <main role="main">
           {hasApiKey ? (
-            <BusPredictions incidents={incidents} />
+            <>
+              <div className={busStop ? "hidden" : ""}>
+                <BusSearch incidents={incidents} onSubmit={handleBusStop} />
+              </div>
+
+              {busStop && (
+                <div className="pt-4">
+                  <button
+                    className="inline-flex items-center gap-2"
+                    onClick={() => setBusStop(null)}
+                  >
+                    <BackIcon />
+                    <span className="underline">Back</span>
+                  </button>
+
+                  <BusPredictions
+                    incidents={incidents}
+                    stopId={busStop.stopId}
+                    stopName={busStop.stopName}
+                  />
+                </div>
+              )}
+            </>
           ) : (
             <Login onLogin={handleLogin} />
           )}

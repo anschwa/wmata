@@ -10,6 +10,7 @@ const API_KEY = DB.getApiKey();
 const API = API_KEY ? new ApiService(API_KEY) : null;
 
 type BusSearchProps = {
+  onSubmit: (bs: BusStop) => void;
   incidents: BusIncidents;
 };
 
@@ -20,8 +21,17 @@ export default function BusSearch(props: BusSearchProps) {
   const [results, setResults] = useState<BusStop[]>([]);
   const [noResults, setNoResults] = useState(false);
 
+  const checkForIncidents = (bs: BusStop): boolean => {
+    return bs.routes.some((r) => props.incidents?.[r]);
+  };
+
+  const checkForStopId = (query: string) => {
+    return query.split(/\s/).length === 1 && /^#?[0-9]+$/.test(query);
+  };
+
   const handleAddress = (address: string) => {
     setAddress(address);
+    setResults([]);
     setNoResults(false);
   };
 
@@ -30,6 +40,17 @@ export default function BusSearch(props: BusSearchProps) {
 
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur(); // Hide keyboard on iOS
+    }
+
+    if (checkForStopId(address)) {
+      const busStop: BusStop = {
+        stopId: address.replace(/#/, ""),
+        stopName: "",
+        routes: [],
+      };
+
+      props.onSubmit(busStop);
+      return;
     }
 
     setLoading(true);
@@ -48,16 +69,13 @@ export default function BusSearch(props: BusSearchProps) {
       .finally(() => setLoading(false));
   };
 
-  const checkIncidents = (bs: BusStop): boolean => {
-    return bs.routes.some((r) => props.incidents?.[r]);
-  };
-
   return (
-    <section>
+    <div>
       <div className="mb-6 p-4 bg-slate-100 rounded-lg shadow">
         <form action="return false;" onSubmit={handleSubmit}>
           <div className="flex items-center gap-2">
             <input
+              value={address}
               onChange={(e) => handleAddress(e.target.value)}
               disabled={searchDisabled}
               className="flex-1 rounded"
@@ -100,33 +118,36 @@ export default function BusSearch(props: BusSearchProps) {
               {results.map((busStop) => (
                 <BusStopSearchItem
                   key={busStop.stopId}
-                  stopId={busStop.stopId}
-                  name={busStop.name}
-                  routes={busStop.routes}
-                  hasIncident={checkIncidents(busStop)}
+                  onClick={() => props.onSubmit(busStop)}
+                  hasIncident={checkForIncidents(busStop)}
+                  {...busStop}
                 />
               ))}
             </ol>
           )}
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
 type BusStopSearchItemProps = {
   stopId: string;
-  name: string;
+  stopName: string;
   routes: string[];
   hasIncident: boolean;
+  onClick: () => void;
 };
 
 function BusStopSearchItem(props: BusStopSearchItemProps) {
   return (
-    <li className="px-1 flex items-center hover:bg-slate-50 hover:cursor-pointer">
+    <li
+      onClick={props.onClick}
+      className="px-1 flex items-center hover:bg-slate-50 hover:cursor-pointer"
+    >
       <BusIcon />
       <div className="p-2">
-        <div className="uppercase text-base">{props.name}</div>
+        <div className="uppercase text-base">{props.stopName}</div>
         <div className="text-sm">
           <span>#{props.stopId}</span>
           <span className="mx-1">⋅</span>
