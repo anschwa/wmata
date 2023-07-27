@@ -5,8 +5,7 @@ import { BusIcon, WarningIcon, RefreshIcon } from "./Icons";
 import DbService from "../services/DbService";
 import ApiService, {
   BusIncidents,
-  BusIncident,
-  BusPrediction,
+  RoutePrediction,
 } from "../services/ApiService";
 
 type BusPredictionsProps = {
@@ -26,7 +25,9 @@ export default function BusPredictions(props: BusPredictionsProps) {
   const [refreshedAt, setRefreshedAt] = useState(new Date());
 
   const [stopName, setStopName] = useState(props.stopName);
-  const [predictions, setPredictions] = useState<BusPrediction[]>([]);
+  const [routePredictions, setRoutePredictions] = useState<RoutePrediction[]>(
+    [],
+  );
 
   const urlForStopId = `https://buseta.wmata.com/m/index?q=${props.stopId}`;
 
@@ -34,17 +35,17 @@ export default function BusPredictions(props: BusPredictionsProps) {
     try {
       setLoading(true);
       setRefreshDisabled(true);
-      setPredictions([]);
 
       const results = await API!.getPredictions(props.stopId);
+
       setStopName(results.stopName);
-      setPredictions(results.predictions);
+      setRoutePredictions(results.predictions);
       setRefreshedAt(new Date());
-      setLoading(false);
     } catch (e) {
       console.error(e);
-      setErrorMsg(`Bus Stop ID #${props.stopId} does not exist`);
+      setErrorMsg(`Unable to find Bus Stop ID #${props.stopId}`);
     } finally {
+      setLoading(false);
       window.setTimeout(() => setRefreshDisabled(false), 5000); // Soft-throttle requests
     }
   }, [props.stopId]);
@@ -57,15 +58,17 @@ export default function BusPredictions(props: BusPredictionsProps) {
     void fetchPredictions();
   }, [props.stopId, fetchPredictions]);
 
+  if (errorMsg) {
+    return (
+      <div className="my-4 p-2 bg-red-50 text-center rounded">
+        <div className="font-bold text-red-800">{errorMsg}</div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      {errorMsg && (
-        <div className="my-4 p-2 bg-red-50 text-center rounded">
-          <div className="font-bold text-red-800">{errorMsg}</div>
-        </div>
-      )}
-
-      <div className="py-8 flex-1 flex items-center justify-center gap-4">
+      <div className="my-4 p-4 flex items-center justify-center gap-4 bg-slate-100 rounded-lg">
         <BusIcon width={48} height={48} />
         <div>
           <div>#{props.stopId}</div>
@@ -85,17 +88,27 @@ export default function BusPredictions(props: BusPredictionsProps) {
       <div
         aria-busy={loading}
         aria-describedby="bus-predictions-progress-bar"
-        className={loading ? "hidden" : ""}
+        className={loading ? "hidden" : "grid grid-cols-1 gap-8"}
       >
-        <ol className="grid grid-cols-1 divide-y rounded-lg shadow">
-          {predictions.map((p) => (
-            <BusPredictionsItem
-              key={`${p.routeId}-${p.minutes}`}
-              incidents={props.incidents?.[p.routeId] || []}
-              {...p}
-            />
-          ))}
-        </ol>
+        {routePredictions.map(({ routeId, headsign, predictions }) => (
+          <div key={`${routeId}:${headsign}`} className="p-4 rounded-lg shadow">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">{routeId}</span>
+              <span className="flex-1 text-center text-xl">{headsign}</span>
+            </div>
+            <ol key={routeId} className="mt-4 grid grid-cols-1 divide-y gap-2">
+              {predictions.map(({ minutes }) => (
+                <BusPredictionsItem
+                  key={`${routeId}-${minutes}`}
+                  minutes={minutes}
+                />
+              ))}
+            </ol>
+            {(props.incidents?.[routeId] || []).map((incident) => (
+              <Incident key={incident.updatedAt.getTime()} {...incident} />
+            ))}
+          </div>
+        ))}
 
         <div className="my-4 text-center">
           <button
@@ -108,8 +121,8 @@ export default function BusPredictions(props: BusPredictionsProps) {
           </button>
 
           <div className="mt-4 text-sm">
-            <span>Last updated at:</span>
-            <span>{refreshedAt.toLocaleTimeString()}</span>
+            <span className="mr-1">Last updated:</span>
+            <span className="ml-1">{refreshedAt.toLocaleTimeString()}</span>
           </div>
         </div>
 
@@ -125,25 +138,19 @@ export default function BusPredictions(props: BusPredictionsProps) {
 }
 
 interface BusPredictionsItemProps {
-  routeId: string;
-  headsign: string;
   minutes: number;
-  incidents: BusIncident[];
 }
 
 function BusPredictionsItem(props: BusPredictionsItemProps) {
+  const arrivingSoon = props.minutes < 10;
+
   return (
-    <li className="p-4">
-      <div className="font-bold text-xl mb-1">{props.minutes} min</div>
-
-      <div className="flex gap-4 items-center text-xl">
-        <div className="">{props.routeId}</div>
-        <div className="flex-1 text-center">{props.headsign}</div>
+    <li className="py-2">
+      <div className="text-xl">
+        <span className={arrivingSoon ? "font-bold" : "font-normal"}>
+          {props.minutes} min
+        </span>
       </div>
-
-      {props.incidents.map((incident) => (
-        <Incident key={incident.updatedAt.getTime()} {...incident} />
-      ))}
     </li>
   );
 }

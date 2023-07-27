@@ -33,6 +33,12 @@ async function getGeoLocation(
 
 type RouteId = string;
 
+const removeRouteVariants = (routes: RouteId[]): RouteId[] => {
+  return Array.from(
+    new Set(routes.map((route) => route.replace(/([^A-Z1-9].+)/g, ""))),
+  );
+};
+
 export interface BusStop {
   stopId: string;
   stopName: string;
@@ -75,20 +81,20 @@ async function getBusStops(
   return results.Stops.map((s) => ({
     stopId: s.StopID,
     stopName: s.Name,
-    routes: s.Routes.filter((route) => !/[^A-Z1-9]/.test(route)),
+    routes: removeRouteVariants(s.Routes),
   }));
 }
 
-export type BusPredictions = {
-  stopName: string;
-  predictions: BusPrediction[];
-};
-
-export interface BusPrediction {
+export type RoutePrediction = {
   routeId: string;
   headsign: string;
-  minutes: number;
-}
+  predictions: { minutes: number }[];
+};
+
+export type BusPredictions = {
+  stopName: string;
+  predictions: RoutePrediction[];
+};
 
 async function getBusPredictions(
   apiKey: string,
@@ -118,14 +124,52 @@ async function getBusPredictions(
   }
 
   const results = (await resp.json()) as apiResults;
-  return {
-    stopName: results.StopName,
-    predictions: results.Predictions.map((p) => ({
+
+  // Group predictions by route
+  type busData = { routeId: string; headsign: string; minutes: number };
+  const routeLookup: Record<string, busData[]> = {};
+
+  for (const p of results.Predictions) {
+    const data = {
       routeId: p.RouteID,
       headsign: p.DirectionText,
       minutes: p.Minutes,
-    })),
-  };
+    };
+
+    const key = `${p.RouteID}:${p.DirectionText}`;
+    const record = routeLookup[key];
+    if (record) {
+      record.push(data);
+      continue;
+    }
+
+    routeLookup[key] = [data];
+  }
+
+  // Organize into RoutePrediction records
+  const routePredictions: RoutePrediction[] = [];
+  for (const key of Object.keys(routeLookup)) {
+    const records = routeLookup[key];
+    const { routeId, headsign } = records[0];
+
+    // Sort predictions by eta
+    const sortedPredictions = records
+      .sort((a, b) => a.minutes - b.minutes)
+      .filter((r) => ({ minutes: r.minutes }));
+
+    routePredictions.push({
+      routeId,
+      headsign,
+      predictions: sortedPredictions,
+    });
+  }
+
+  // Sort results by routeId
+  const sortedRoutePredictions = routePredictions.sort((a, b) =>
+    a.routeId.localeCompare(b.routeId),
+  );
+
+  return { stopName: results.StopName, predictions: sortedRoutePredictions };
 }
 
 export type BusIncident = {

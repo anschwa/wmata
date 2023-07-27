@@ -1,0 +1,12 @@
+{
+  "name": "DC BUS LIFE",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "white",
+  "icons": [
+    {
+      "src": "touch-icon.png",
+      "sizes": "512x512"
+    }
+  ]
+}
