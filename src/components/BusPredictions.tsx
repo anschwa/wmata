@@ -1,17 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 
-import { BusIcon, WarningIcon, RefreshIcon } from "./Icons";
-
 import DbService from "../services/DbService";
-import ApiService, {
-  BusIncidents,
-  RoutePrediction,
-} from "../services/ApiService";
+import ApiService, { RoutePrediction } from "../services/ApiService";
+
+import { RouteIncidents } from "./App";
+import BusIncident from "./BusIncident";
+import { BusIcon, RefreshIcon } from "./Icons";
 
 type BusPredictionsProps = {
   stopId: string;
   stopName: string;
-  incidents: BusIncidents;
+  incidents: RouteIncidents;
 };
 
 const DB = new DbService();
@@ -105,7 +104,7 @@ export default function BusPredictions(props: BusPredictionsProps) {
               ))}
             </ol>
             {(props.incidents?.[routeId] || []).map((incident) => (
-              <Incident key={incident.updatedAt.getTime()} {...incident} />
+              <BusIncident key={incident.updatedAt.getTime()} {...incident} />
             ))}
           </div>
         ))}
@@ -137,9 +136,9 @@ export default function BusPredictions(props: BusPredictionsProps) {
   );
 }
 
-interface BusPredictionsItemProps {
+type BusPredictionsItemProps = {
   minutes: number;
-}
+};
 
 function BusPredictionsItem(props: BusPredictionsItemProps) {
   const arrivingSoon = props.minutes < 10;
@@ -152,28 +151,5 @@ function BusPredictionsItem(props: BusPredictionsItemProps) {
         </span>
       </div>
     </li>
-  );
-}
-
-interface IncidentProps {
-  incidentType: string;
-  description: string;
-  updatedAt: Date;
-}
-
-function Incident(props: IncidentProps) {
-  const updatedAt = props.updatedAt.toLocaleString("en-US", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
-
-  return (
-    <div className="mt-4 flex gap-2">
-      <WarningIcon />
-      <div className="flex-1 text-sm">
-        <div className="text-sm text-left">{props.description}</div>
-        <div className="text-sm text-right">{updatedAt}</div>
-      </div>
-    </div>
   );
 }

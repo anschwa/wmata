@@ -3,7 +3,26 @@ interface GeoLocation {
   readonly lon: string;
 }
 
-async function getGeoLocation(
+async function getBrowserGeoLocation(): Promise<GeoLocation> {
+  return new Promise((resolve, reject) => {
+    const successFunc = (position: GeolocationPosition) =>
+      resolve({
+        lat: position.coords.latitude.toString(),
+        lon: position.coords.longitude.toString(),
+      });
+
+    const errorFunc = (error: GeolocationPositionError) =>
+      reject(
+        new Error(
+          `getBrowserGeoLocation: code: ${error.code}; message: ${error.message}`,
+        ),
+      );
+
+    navigator.geolocation.getCurrentPosition(successFunc, errorFunc);
+  });
+}
+
+async function getAddressGeoLocation(
   streetAddress: string,
 ): Promise<GeoLocation | null> {
   if (!streetAddress) {
@@ -175,12 +194,11 @@ async function getBusPredictions(
 export type BusIncident = {
   description: string;
   incidentType: string;
+  routesAffected: RouteId[];
   updatedAt: Date;
 };
 
-export type BusIncidents = Record<RouteId, BusIncident[]> | null;
-
-async function getBusIncidents(apiKey: string): Promise<BusIncidents> {
+async function getBusIncidents(apiKey: string): Promise<BusIncident[]> {
   interface apiResults {
     BusIncidents: {
       DateUpdated: Date;
@@ -195,25 +213,12 @@ async function getBusIncidents(apiKey: string): Promise<BusIncidents> {
   const resp = await fetch(url, { headers: { api_key: apiKey } });
 
   const results = (await resp.json()) as apiResults;
-
-  const incidents: BusIncidents = {};
-  for (const incident of results.BusIncidents) {
-    const newIncident = {
-      description: incident.Description,
-      incidentType: incident.IncidentType,
-      updatedAt: new Date(incident.DateUpdated),
-    };
-
-    for (const routeId of incident.RoutesAffected) {
-      const record = incidents[routeId];
-      if (record) {
-        record.push(newIncident);
-        continue;
-      }
-
-      incidents[routeId] = [newIncident];
-    }
-  }
+  const incidents = results.BusIncidents.map((incident) => ({
+    description: incident.Description,
+    incidentType: incident.IncidentType,
+    routesAffected: incident.RoutesAffected,
+    updatedAt: new Date(incident.DateUpdated),
+  }));
 
   return incidents;
 }
@@ -229,8 +234,9 @@ export async function validateApiKey(apiKey: string): Promise<boolean> {
 
 interface BusApi {
   findStops: (address: string) => Promise<BusStop[]>;
+  findNearestStops: () => Promise<BusStop[]>;
   getPredictions: (stopId: string) => Promise<BusPredictions>;
-  getIncidents: () => Promise<BusIncidents>;
+  getIncidents: () => Promise<BusIncident[]>;
 }
 
 export default class Api implements BusApi {
@@ -245,10 +251,16 @@ export default class Api implements BusApi {
   }
 
   async findStops(address: string): Promise<BusStop[]> {
-    const geo = await getGeoLocation(address);
+    const geo = await getAddressGeoLocation(address);
     if (!geo) {
       return [];
     }
+
+    return getBusStops(this.apiKey, geo);
+  }
+
+  async findNearestStops(): Promise<BusStop[]> {
+    const geo = await getBrowserGeoLocation();
 
     return getBusStops(this.apiKey, geo);
   }
@@ -257,7 +269,7 @@ export default class Api implements BusApi {
     return getBusPredictions(this.apiKey, stopId);
   }
 
-  async getIncidents(): Promise<BusIncidents> {
+  async getIncidents(): Promise<BusIncident[]> {
     return getBusIncidents(this.apiKey);
   }
 }

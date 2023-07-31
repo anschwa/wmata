@@ -1,8 +1,9 @@
 import { useState } from "react";
 
 import DbService from "../services/DbService";
-import ApiService, { BusStop, BusIncidents } from "../services/ApiService";
+import ApiService, { BusStop } from "../services/ApiService";
 
+import { RouteIncidents } from "./App";
 import { BusIcon, SearchIcon, WarningIcon } from "./Icons";
 
 const DB = new DbService();
@@ -11,7 +12,7 @@ const API = API_KEY ? new ApiService(API_KEY) : null;
 
 type BusSearchProps = {
   onSubmit: (bs: BusStop) => void;
-  incidents: BusIncidents;
+  incidents: RouteIncidents;
 };
 
 export default function BusSearch(props: BusSearchProps) {
@@ -55,6 +56,24 @@ export default function BusSearch(props: BusSearchProps) {
 
     setLoading(true);
     setSearchDisabled(true);
+
+    if (address.toLowerCase() === "near me") {
+      API!
+        .findNearestStops()
+        .then((results) => {
+          setResults(results);
+          setNoResults(results.length === 0);
+
+          // Soft-throttle searches to 1 per second
+          window.setTimeout(() => setSearchDisabled(false), 1000);
+        })
+        .catch((e) => {
+          window.alert(e);
+          console.error(e);
+        })
+        .finally(() => setLoading(false));
+      return;
+    }
 
     API!
       .findStops(address)
@@ -114,7 +133,7 @@ export default function BusSearch(props: BusSearchProps) {
           )}
 
           {results.length > 0 && (
-            <ol className="mt-4 p-2 bg-white rounded-lg grid grid-cols-1 divide-y">
+            <ul className="mt-4 p-2 bg-white rounded-lg grid grid-cols-1 divide-y">
               {results.map((busStop) => (
                 <BusStopSearchItem
                   key={busStop.stopId}
@@ -123,7 +142,7 @@ export default function BusSearch(props: BusSearchProps) {
                   {...busStop}
                 />
               ))}
-            </ol>
+            </ul>
           )}
         </div>
       </div>
@@ -158,7 +177,9 @@ function BusStopSearchItem(props: BusStopSearchItemProps) {
       {props.hasIncident && (
         <>
           <div className="flex-1"></div>
-          <WarningIcon />
+          <div className="flex-none">
+            <WarningIcon />
+          </div>
         </>
       )}
     </li>
