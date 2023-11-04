@@ -164,7 +164,9 @@ function BusStopSearchItem(props: BusStopSearchItemProps) {
       onClick={props.onClick}
       className="px-1 flex items-center hover:bg-slate-50 hover:cursor-pointer"
     >
-      <BusIcon />
+      <div className="flex-none">
+        <BusIcon />
+      </div>
       <div className="p-2">
         <div className="uppercase text-base">{props.stopName}</div>
         <div className="text-sm">

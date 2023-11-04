@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 import DbService from "../services/DbService";
-import ApiService, { RoutePrediction } from "../services/ApiService";
+import ApiService, { BusStop, RoutePrediction } from "../services/ApiService";
 
 import { RouteIncidents } from "./App";
 import BusIncident from "./BusIncident";
@@ -11,6 +11,7 @@ type BusPredictionsProps = {
   stopId: string;
   stopName: string;
   incidents: RouteIncidents;
+  onResults: (bs: BusStop) => void;
 };
 
 const DB = new DbService();
@@ -30,24 +31,30 @@ export default function BusPredictions(props: BusPredictionsProps) {
 
   const urlForStopId = `https://buseta.wmata.com/m/index?q=${props.stopId}`;
 
+  const { stopId, onResults } = props;
   const fetchPredictions = useCallback(async () => {
     try {
       setLoading(true);
       setRefreshDisabled(true);
 
-      const results = await API!.getPredictions(props.stopId);
+      const results = await API!.getPredictions(stopId);
 
       setStopName(results.stopName);
       setRoutePredictions(results.predictions);
       setRefreshedAt(new Date());
+      onResults({
+        stopId: stopId,
+        stopName: results.stopName,
+        routes: [],
+      });
     } catch (e) {
       console.error(e);
-      setErrorMsg(`Unable to find Bus Stop ID #${props.stopId}`);
+      setErrorMsg(`Unable to find Bus Stop ID #${stopId}`);
     } finally {
       setLoading(false);
       window.setTimeout(() => setRefreshDisabled(false), 5000); // Soft-throttle requests
     }
-  }, [props.stopId]);
+  }, [stopId, onResults]);
 
   useEffect(() => {
     if (!props.stopId) {
