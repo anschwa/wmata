@@ -1,11 +1,14 @@
-#+TITLE: wmata
-#+AUTHOR: Adam Schwartz
-#+DATE: July 16, 2023
-#+OPTIONS: ':true *:true toc:nil num:nil ^:nil
+* wmata
+Better DC bus tracking.
 
-* Washington Metropolitan Area Transit Authority
+Sign up for a developer account at: https://developer.wmata.com/
 
-- Sign up for a developer account at: https://developer.wmata.com/
+[[file:screenshot.png]]
+
+* Local Development
+#+begin_src sh
+make start
+#+end_src
 
 * Getting Bus Stops For Route
 #+begin_src sh

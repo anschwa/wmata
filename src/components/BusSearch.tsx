@@ -15,8 +15,12 @@ type BusSearchProps = {
   incidents: RouteIncidents;
 };
 
+// Handle search via URL
+const URLParams = new URLSearchParams(document.location.search);
+const URLQuery = URLParams.get("q") || "";
+
 export default function BusSearch(props: BusSearchProps) {
-  const [address, setAddress] = useState("");
+  const [searchQuery, setSearchQuery] = useState(URLQuery);
   const [searchDisabled, setSearchDisabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<BusStop[]>([]);
@@ -30,10 +34,22 @@ export default function BusSearch(props: BusSearchProps) {
     return query.split(/\s/).length === 1 && /^#?[0-9]+$/.test(query);
   };
 
-  const handleAddress = (address: string) => {
-    setAddress(address);
+  const updateURL = (key: string, value: string) => {
+    const url = new URLSearchParams(location.search);
+    url.set(key, value);
+    history.replaceState(null, "", `?${url.toString()}`);
+  };
+
+  const handleSearchQuery = (query: string) => {
+    updateURL("q", query);
+    setSearchQuery(query);
     setResults([]);
     setNoResults(false);
+  };
+
+  const submitBusStop = (busStop: BusStop) => {
+    updateURL("id", busStop.stopId);
+    props.onSubmit(busStop);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -43,21 +59,21 @@ export default function BusSearch(props: BusSearchProps) {
       document.activeElement.blur(); // Hide keyboard on iOS
     }
 
-    if (checkForStopId(address)) {
+    if (checkForStopId(searchQuery)) {
       const busStop: BusStop = {
-        stopId: address.replace(/#/, ""),
+        stopId: searchQuery.replace(/#/, ""),
         stopName: "",
         routes: [],
       };
 
-      props.onSubmit(busStop);
+      submitBusStop(busStop);
       return;
     }
 
     setLoading(true);
     setSearchDisabled(true);
 
-    if (address.toLowerCase() === "near me") {
+    if (searchQuery.toLowerCase() === "near me") {
       API!
         .findNearestStops()
         .then((results) => {
@@ -76,7 +92,7 @@ export default function BusSearch(props: BusSearchProps) {
     }
 
     API!
-      .findStops(address)
+      .findStops(searchQuery)
       .then((results) => {
         setResults(results);
         setNoResults(results.length === 0);
@@ -94,8 +110,8 @@ export default function BusSearch(props: BusSearchProps) {
         <form action="return false;" onSubmit={handleSubmit}>
           <div className="flex items-center gap-2">
             <input
-              value={address}
-              onChange={(e) => handleAddress(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => handleSearchQuery(e.target.value)}
               disabled={searchDisabled}
               className="flex-1 rounded"
               type="search"
@@ -105,7 +121,7 @@ export default function BusSearch(props: BusSearchProps) {
 
             <button
               type="submit"
-              disabled={!address || searchDisabled}
+              disabled={!searchQuery || searchDisabled}
               className="bg-blue-500 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded"
             >
               <SearchIcon />
@@ -128,7 +144,7 @@ export default function BusSearch(props: BusSearchProps) {
         >
           {noResults && (
             <div className="mt-4 text-center">
-              No bus stops found near "{address}".
+              No bus stops found near "{searchQuery}".
             </div>
           )}
 
@@ -137,7 +153,7 @@ export default function BusSearch(props: BusSearchProps) {
               {results.map((busStop) => (
                 <BusStopSearchItem
                   key={busStop.stopId}
-                  onClick={() => props.onSubmit(busStop)}
+                  onClick={() => submitBusStop(busStop)}
                   hasIncident={checkForIncidents(busStop)}
                   {...busStop}
                 />

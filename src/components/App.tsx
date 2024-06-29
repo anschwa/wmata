@@ -40,9 +40,16 @@ function getRouteIncidents(busIncidents: BusIncident[]): RouteIncidents {
   return incidents;
 }
 
+// Handle stopId via URL
+const URLParams = new URLSearchParams(document.location.search);
+const URLStopId = URLParams.get("id") || "";
+const URLBusStop = URLStopId
+  ? { stopId: URLStopId, stopName: "", routes: [] }
+  : null;
+
 export default function App() {
   const hasApiKey = !!API_KEY;
-  const [busStop, setBusStop] = useState<BusStop | null>(null);
+  const [busStop, setBusStop] = useState<BusStop | null>(URLBusStop);
   const [favorites, setFavorites] = useState<BusStop[]>(FAVORITES);
   const [incidents, setIncidents] = useState<BusIncident[]>([]);
   const [routeIncidents, setRouteIncidents] = useState<RouteIncidents>({});
@@ -83,7 +90,13 @@ export default function App() {
     window.location.reload();
   };
 
-  const handleBusStop = (bs: BusStop) => {
+  const handleBusStop = (bs: BusStop | null) => {
+    if (!bs) {
+      const url = new URLSearchParams(location.search);
+      url.delete("id");
+      history.replaceState(null, "", `?${url.toString()}`);
+    }
+
     setBusStop(bs);
   };
 
@@ -123,7 +136,7 @@ export default function App() {
                   <div className="flex items-center justify-between">
                     <button
                       className="inline-flex items-center gap-2"
-                      onClick={() => setBusStop(null)}
+                      onClick={() => handleBusStop(null)}
                     >
                       <BackIcon />
                       <span className="underline">Back</span>

@@ -6,14 +6,17 @@ type LoginProps = {
   onLogin: (apiKey: string) => void;
 };
 
-function Login(props: LoginProps) {
-  const [apiKey, setApiKey] = useState("");
-  const [errorMsg, setErrorMsg] = useState<string>("");
-  const [loginDisabled, setLoginDisabled] = useState(true);
+// Handle login via URL
+const URLParams = new URLSearchParams(document.location.search);
+const URLToken = URLParams.get("token") || "";
+
+export default function Login(props: LoginProps) {
+  const [apiKey, setApiKey] = useState(URLToken);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loginDisabled, setLoginDisabled] = useState(apiKey.length === 0);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     setLoginDisabled(true); // Soft-throttle requests
 
     validateApiKey(apiKey)
@@ -51,6 +54,7 @@ function Login(props: LoginProps) {
           name="apiKey"
           type="text"
           placeholder="abcdef0123456789fedcba9876543210"
+          value={apiKey}
         />
       </label>
 
@@ -64,5 +68,3 @@ function Login(props: LoginProps) {
     </form>
   );
 }
-
-export default Login;
